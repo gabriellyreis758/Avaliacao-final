@@ -1,0 +1,46 @@
+// lib/services/auth_service.dart
+import '../models/user.dart';
+
+class AuthService {
+  // Lista simulada de usuários (normalmente viria de uma API ou banco de dados)
+  static final List<User> _mockUsers = [
+    User(
+      id: '1',
+      email: 'usuario@exemplo.com',
+      password: 'senha123',
+      name: 'Usuário Teste',
+    ),
+    User(
+      id: '2',
+      email: 'admin@empresa.com',
+      password: 'admin2024',
+      name: 'Administrador',
+    ),
+  ];
+
+  // Método de login
+  static Future<User?> login(String email, String password) async {
+    // Simula delay de rede (800ms)
+    await Future.delayed(const Duration(milliseconds: 800));
+
+    // Busca usuário com e-mail e senha correspondentes
+    try {
+      final user = _mockUsers.firstWhere(
+        (u) => u.email == email && u.password == password,
+      );
+      return user;
+    } catch (e) {
+      // Usuário não encontrado
+      return null;
+    }
+  }
+
+  // Validação de e-mail
+  static bool validateEmail(String email) {
+    final RegExp emailRegex = RegExp(
+      r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
+      caseSensitive: false,
+    );
+    return emailRegex.hasMatch(email);
+  }
+}

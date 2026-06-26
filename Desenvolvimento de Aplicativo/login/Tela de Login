@@ -1,0 +1,318 @@
+// lib/screens/login_screen.dart
+import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
+import '../models/user.dart';
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  // Controllers para os campos de texto
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  // Estado do formulário
+  bool _isLoading = false;
+  String _emailError = '';
+  String _passwordError = '';
+  String _generalError = '';
+
+  // Focus nodes para gerenciar foco dos campos
+  final FocusNode _emailFocusNode = FocusNode();
+  final FocusNode _passwordFocusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+    super.dispose();
+  }
+
+  // Validação do formulário
+  bool _validateForm() {
+    bool isValid = true;
+    setState(() {
+      _emailError = '';
+      _passwordError = '';
+    });
+
+    // Validação de e-mail
+    if (_emailController.text.isEmpty) {
+      setState(() {
+        _emailError = 'O e-mail é obrigatório';
+      });
+      isValid = false;
+    } else if (!AuthService.validateEmail(_emailController.text)) {
+      setState(() {
+        _emailError = 'Por favor, insira um e-mail válido';
+      });
+      isValid = false;
+    }
+
+    // Validação de senha
+    if (_passwordController.text.isEmpty) {
+      setState(() {
+        _passwordError = 'A senha é obrigatória';
+      });
+      isValid = false;
+    } else if (_passwordController.text.length < 6) {
+      setState(() {
+        _passwordError = 'A senha deve ter pelo menos 6 caracteres';
+      });
+      isValid = false;
+    }
+
+    return isValid;
+  }
+
+  // Método de login
+  Future<void> _handleLogin() async {
+    // Limpa erro geral anterior
+    setState(() {
+      _generalError = '';
+    });
+
+    // Valida o formulário
+    if (!_validateForm()) {
+      return;
+    }
+
+    // Inicia loading
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Tenta fazer login
+      final User? user = await AuthService.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+
+      if (user != null) {
+        // Login bem-sucedido
+        print('Usuário logado: ${user.name}');
+        
+        // Navega para a tela Home (substitui a pilha)
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/home');
+        }
+      } else {
+        // Credenciais inválidas
+        setState(() {
+          _generalError = 'E-mail ou senha incorretos. Por favor, tente novamente.';
+          _passwordController.clear(); // Limpa senha por segurança
+        });
+      }
+    } catch (e) {
+      // Erro inesperado
+      setState(() {
+        _generalError = 'Ocorreu um erro ao tentar fazer login. Tente novamente mais tarde.';
+      });
+      debugPrint('Erro no login: $e');
+    } finally {
+      // Finaliza loading
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 40),
+                
+                // Título
+                const Text(
+                  'Bem-vindo',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Faça login para continuar',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 40),
+
+                // Campo de E-mail
+                TextField(
+                  controller: _emailController,
+                  focusNode: _emailFocusNode,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  autocorrect: false,
+                  enabled: !_isLoading,
+                  decoration: InputDecoration(
+                    labelText: 'E-mail',
+                    hintText: 'seu@email.com',
+                    prefixIcon: const Icon(Icons.email),
+                    errorText: _emailError.isNotEmpty ? _emailError : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.blue, width: 2),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.red, width: 2),
+                    ),
+                  ),
+                  onSubmitted: (_) {
+                    _emailFocusNode.unfocus();
+                    _passwordFocusNode.requestFocus();
+                  },
+                ),
+                const SizedBox(height: 20),
+
+                // Campo de Senha
+                TextField(
+                  controller: _passwordController,
+                  focusNode: _passwordFocusNode,
+                  obscureText: true,
+                  textInputAction: TextInputAction.done,
+                  enabled: !_isLoading,
+                  decoration: InputDecoration(
+                    labelText: 'Senha',
+                    hintText: 'Digite sua senha',
+                    prefixIcon: const Icon(Icons.lock),
+                    errorText: _passwordError.isNotEmpty ? _passwordError : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.blue, width: 2),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.red, width: 2),
+                    ),
+                  ),
+                  onSubmitted: (_) {
+                    _passwordFocusNode.unfocus();
+                    _handleLogin();
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Mensagem de erro geral
+                if (_generalError.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.error_outline, color: Colors.red.shade700),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _generalError,
+                            style: TextStyle(
+                              color: Colors.red.shade700,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 24),
+
+                // Botão de Login
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _handleLogin,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: _isLoading ? 0 : 2,
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : const Text(
+                            'Entrar',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Link para cadastro (opcional)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Não tem uma conta? ',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    GestureDetector(
+                      onTap: _isLoading
+                          ? null
+                          : () {
+                              // Navegar para tela de cadastro
+                              // Navigator.pushNamed(context, '/register');
+                            },
+                      child: Text(
+                        'Cadastre-se',
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.w600,
+                          decoration: TextDecoration.underline,
+                          decorationColor: Colors.blue,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

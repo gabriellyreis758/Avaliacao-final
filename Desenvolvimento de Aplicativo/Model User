@@ -1,0 +1,59 @@
+class User {
+  final String id;
+  final String nome;
+  final String email;
+  final String senha;
+  final DateTime dataCadastro;
+
+  User({
+    required this.id,
+    required this.nome,
+    required this.email,
+    required this.senha,
+    required this.dataCadastro,
+  });
+
+  // Método para validar os dados do usuário
+  bool isValid() {
+    return nome.trim().isNotEmpty &&
+           email.contains('@') &&
+           senha.length >= 6;
+  }
+
+  // Método para criar uma cópia segura (sem a senha)
+  Map<String, dynamic> toSafeJson() {
+    return {
+      'id': id,
+      'nome': nome,
+      'email': email,
+      'dataCadastro': dataCadastro.toIso8601String(),
+    };
+  }
+
+  // Método estático para criar um usuário a partir de um mapa
+  factory User.fromMap(Map<String, dynamic> map) {
+    return User(
+      id: map['id'],
+      nome: map['nome'],
+      email: map['email'],
+      senha: map['senha'],
+      dataCadastro: DateTime.parse(map['dataCadastro']),
+    );
+  }
+
+  // Método para criar um novo usuário com ID automático
+  static User create(String nome, String email, String senha) {
+    return User(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      nome: nome.trim(),
+      email: email.trim().toLowerCase(),
+      senha: senha,
+      dataCadastro: DateTime.now(),
+    );
+  }
+
+  @override
+  String toString() {
+    return 'User(id: $id, nome: $nome, email: $email, dataCadastro: $dataCadastro)';
+  }
+}

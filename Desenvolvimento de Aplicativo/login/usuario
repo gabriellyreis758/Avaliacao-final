@@ -1,0 +1,33 @@
+// lib/models/user.dart
+class User {
+  final String id;
+  final String email;
+  final String password;
+  final String name;
+
+  User({
+    required this.id,
+    required this.email,
+    required this.password,
+    required this.name,
+  });
+
+  // Para converter de/para JSON (caso use API futuramente)
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'],
+      email: json['email'],
+      password: json['password'],
+      name: json['name'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'email': email,
+      'password': password,
+      'name': name,
+    };
+  }
+}

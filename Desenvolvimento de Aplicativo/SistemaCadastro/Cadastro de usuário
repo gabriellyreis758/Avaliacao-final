@@ -1,0 +1,150 @@
+class User {
+  final String name;
+  final String email;
+  final String password;
+
+  User({
+    required this.name,
+    required this.email,
+    required this.password,
+  });
+}
+
+class UserRepository {
+  // Lista em memória que armazenará os usuários cadastrados
+  static final List<User> _registeredUsers = [];
+
+  // Método para salvar um novo usuário
+  static void saveUser(User user) {
+    _registeredUsers.add(user);
+    print("Usuário cadastrado com sucesso! Total: ${_registeredUsers.length}");
+  }
+
+  // Método opcional para listar os usuários (caso queira exibir depois)
+  static List<User> getAllUsers() {
+    return _registeredUsers;
+  }
+}
+
+import 'package:flutter/material.dart';
+import 'user.dart';
+import 'user_repository.dart';
+
+class RegisterScreen extends StatefulWidget {
+  @override
+  _RegisterScreenState createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
+  // Chave global para validação do formulário
+  final _formKey = GlobalKey<FormState>();
+
+  // Controladores para capturar o texto dos inputs
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  void _submitForm() {
+    // Valida se todos os campos estão preenchidos corretamente
+    if (_formKey.currentState!.validate()) {
+      // 1. Cria a instância do Model 'User' com os dados do formulário
+      final newUser = User(
+        name: _nameController.text,
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+
+      // 2. Salva na lista em memória
+      UserRepository.saveUser(newUser);
+
+      // 3. Feedback visual para o usuário
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Cadastro realizado com sucesso!')),
+      );
+
+      // 4. Limpa os campos do formulário
+      _nameController.clear();
+      _emailController.clear();
+      _passwordController.clear();
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Cadastro de Usuário')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                // Campo: Nome
+                TextFormField(
+                  controller: _nameController,
+                  decoration: InputDecoration(labelText: 'Nome'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor, insira seu nome';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 16),
+
+                // Campo: E-mail
+                TextFormField(
+                  controller: _emailController,
+                  decoration: InputDecoration(labelText: 'E-mail'),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor, insira seu e-mail';
+                    }
+                    if (!value.contains('@')) {
+                      return 'Insira um e-mail válido';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 16),
+
+                // Campo: Senha
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: InputDecoration(labelText: 'Senha'),
+                  obscureText: true, // Esconde a senha
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor, insira uma senha';
+                    }
+                    if (value.length < 6) {
+                      return 'A senha deve ter pelo menos 6 caracteres';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 32),
+
+                // Botão de Cadastrar
+                ElevatedButton(
+                  onPressed: _submitForm,
+                  child: Text('Cadastrar'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
